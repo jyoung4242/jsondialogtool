@@ -1,0 +1,70 @@
+ <div class="maincontent \${blurString}">
+  
+      <div class="Header">
+        <div class="HeaderTitle"> Dialog Config Tool -> JSON output</div>
+        <div class="HeaderButtons">
+          <button class="buttons" \${click@=>newTree}>New Tree</button>
+          <button class="buttons" \${click@=>editTree}>Edit Tree</button>
+          <button class="buttons" \${disabled<=>isNewBranchDisabled} \${click@=>newBranch}>New Branch</button>
+          <button class="buttons" \${disabled<=>isNewEntryDisabled} \${click@=>newEntry}>New Entry</button>
+          <button class="buttons" \${disabled<=>isExportDisabled} \${click@=>exportJSON}>Export JSON</button>
+        </div>
+      </div>
+
+      <div class="Current">
+          <div class="currentEntry">
+            <span class="currentText">Current Tree</span>
+            <span class="currentText"> > </span>
+            <span class="currentText">\${currentTree}</span>
+          </div>
+          <div class="currentEntry">
+            <span class="currentText">Current Branch</span>
+            <span class="currentText"> > </span>
+            <span class="currentText">\${currentBranch}</span>
+          </div>
+          <div class="currentEntry">
+            <span class="currentText">Current Entry</span>
+            <span class="currentText"> > </span>
+            <span class="currentText">\${currentEntry}</span>
+          </div>
+      </div>
+
+      <div class="TreeView">
+        <span class="TV_title">Dialog Tree View</span>
+        <div class="TV_content">
+          <div class="TV_tree"  \${===getTree}>
+            <div class="dropdown"></div>
+            <span>\${currentTree}</span>
+           </div>
+          <div class="TV_branches" \${branch<=*branches}>
+                  <div class="TV_branchTitle">
+                      <div class="dropdown "></div>
+                      <div class="TV_entries">Branch - \${branch.id}</div>
+                  </div>
+                  <div class="TV_conditions">
+                      <div class="condition">
+                          <div class="dropdown "></div>
+                          <div>Conditions:</div>
+                      </div>  
+                      <div class="condition bump"\${condition<=*getConditions:id}>-\${condition.id} : \${condition.entry}</div>
+                  </div>
+                  <div class="TV_entrycontent">
+                      <div class="condition">
+                          <div class="dropdown "></div>
+                          <div>Content:</div>
+                      </div> 
+                      <div class="condition bump"\${content<=*getContent:entry}>  Entry:    \${content.type}</div>
+                  </div>
+                  
+              </div>                  
+                  
+              </div>
+            
+
+         
+        </div>
+    </div>
+    <div class="Content"></div>
+</div>
+  
+    
