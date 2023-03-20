@@ -81,7 +81,7 @@ const model = {
   get getBranches() {
     return this.branches;
   },
-  get getConditions() {
+  /* get getConditions() {
     const conds = Object.keys(this.branches[this.selectedBranch].conditions);
     const newArray = <any>[];
     conds.forEach((k: any, i: number) => {
@@ -89,7 +89,20 @@ const model = {
       console.log({ id: k, entry: this.branches[this.selectedBranch].conditions[k] });
     });
 
+    console.log(newArray);
+
     return newArray;
+  }, */
+  get getCurrentBranch() {
+    return this.currentBranch;
+  },
+  get getConditions() {
+    return this.branches[this.selectedBranch].conditions;
+    /* const conditions = this.branches[this.selectedBranch].conditions;
+    const result = Object.keys(conditions).map(id => {
+      return { id, entry: conditions[id] };
+    });
+    return result; */
   },
   get getContent() {
     const conds = Object.keys(this.branches[this.selectedBranch].content);
@@ -152,7 +165,7 @@ const model = {
     object.$parent.$model.branchSelected = false;
     model.branch.UI.contentSelected = true;
   },
-  conditionClicked: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
+  conditionClicked: (_event: any, model: any, element: HTMLElement, _attribute: any, object: any) => {
     if (model.branch.UI.condistionsCollapsed) model.branch.UI.condistionsCollapsed = false;
     else model.branch.UI.condistionsCollapsed = true;
     unselectALL();
@@ -160,6 +173,10 @@ const model = {
     object.$parent.$model.selectedCondition = true;
     object.$parent.$model.branchSelected = false;
     model.branch.UI.conditionsSelected = true;
+    console.log(element.getAttribute("data-branch"));
+    console.log(model);
+    object.$parent.$model.currentBranch = `Branch-${model.branch.id}`;
+    object.$parent.$model.selectedBranch = model.branch.id;
   },
   branchClicked: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
     if (model.branch.UI.branchCollapsed) model.branch.UI.branchCollapsed = false;
@@ -171,6 +188,7 @@ const model = {
 
     model.branch.UI.branchSelected = true;
     object.$parent.$model.currentBranch = `Branch-${model.branch.id}`;
+    object.$parent.$model.selectedBranch = model.branch.id;
   },
   treeClicked: (_event: any, model: any) => {
     if (model.treeCollapsed) {
@@ -235,12 +253,12 @@ const template = `
                         </div>
                         <div \${!==branch.UI.branchCollapsed}>
                             <div class="TV_conditions  ">
-                            <div class="condition \${branch.UI.getConditionSelected}" \${click@=>conditionClicked}>
+                            <div class="condition \${branch.UI.getConditionSelected}" \${click@=>conditionClicked} data-branch="\${branch.$index}">
                                 <div class="dropdown \${branch.UI.getConditionCaretRotation} \${branch.UI.getConditionSelected}"></div>
                                 <div>Conditions:</div>
                             </div>  
                             <div \${===branch.UI.condistionsCollapsed}>
-                                <div class="condition bump"\${condition<=*getConditions:id}>-\${condition.id} : \${condition.entry}</div>
+                                <div class="condition bump"\${condition<=*branch.getConditions:id}>-\${condition.id} : \${condition.entry}</div>
                             </div>
                             
                             </div>
@@ -264,7 +282,7 @@ const template = `
     <div class="Content">
       <div class="CT_flex" style="position: relative; width: 100%; height: 100%;"  \${===getIsSomethingSelected}>
           <div class="CT_Title">
-              \${currentBranch}
+              \${getCurrentBranch}
           </div>
 
           <div class="CT_Branches"  \${===branchSelected}>
@@ -281,11 +299,10 @@ const template = `
                     <div>\${condition.id}</div>
                     <span>:</span>
                     <div style="font-style: italic">\${condition.entry}</div>
-                    <a href="#" class="CT_Link smallLink" \${click@=>toggleFlag} data-key="\${condition.id}" >Toggle Flag</a>
+                    <a href="#" class="CT_Link smallLink" \${click@=>condition.toggle} data-key="\${condition.id}" >Toggle Flag</a>
               </div>
               </div>
-  
-            </div>
+              </div>
           </div>
 
           <div  class="CT_Content" \${===isContentSelected}>
@@ -443,14 +460,18 @@ function newBranch() {
         else return " isSelected";
       },
     },
-    conditions: {},
+    conditions: [],
     content: [],
+    get getConditions() {
+      return this.conditions;
+    },
   };
   model.branches.push(newBranch);
   model.currentBranch = `Branch-${newID}`;
   model.branchSelected = true;
   model.selectedContent = false;
   model.selectedCondition = false;
+  model.selectedBranch = newID;
 }
 function newEntry() {}
 function exportJSON() {}
@@ -475,9 +496,14 @@ function modalSubmit(model: any) {
       const newFlag = model.modalInput;
       //insert data into branch.condition object
       const bIndex = model.currentBranch.split("-")[1];
-      model.branches[bIndex].conditions[newFlag] = false;
-      console.log(model.branches[bIndex].conditions);
-
+      model.branches[bIndex].conditions.push({
+        id: newFlag,
+        entry: false,
+        toggle: (_event: any, model: any) => {
+          if (model.condition.entry) model.condition.entry = false;
+          else model.condition.entry = true;
+        },
+      });
       model.modalIsVisible = false;
       model.isBlurred = false;
       break;
