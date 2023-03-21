@@ -1,34 +1,6 @@
 import "./style.css";
 import { UI } from "@peasy-lib/peasy-ui";
-
-//#region types
-type OptionData = {
-  message: string;
-  flags: ConditionData;
-};
-
-type ConditionData = Record<"string", boolean>;
-
-type ContentData = {
-  type: "basic" | "left" | "right" | "left_interact" | "right_interact";
-  speed?: number;
-  message?: string;
-  avatar?: string;
-  end?: boolean;
-  flags?: ConditionData;
-  options?: OptionData;
-};
-
-type EntryData = {
-  id: string;
-  conditions: ConditionData;
-  content: Array<ContentData>;
-};
-type BranchData = {
-  entry: Array<EntryData>;
-};
-
-//#endregion types
+import { v4 as uuidv4 } from "uuid";
 
 //#region peasyUI
 const model = {
@@ -38,6 +10,9 @@ const model = {
   currentBranch: "N/A",
   currentEntry: "N/A",
   isNewBranchDisabled: true,
+  isEntrySelected: false,
+  selectedEntry: 0,
+  selectedOption: 0,
   isNewEntryDisabled: true,
   isExportDisabled: true,
   treeCollapsed: false,
@@ -46,11 +21,17 @@ const model = {
   selectedCondition: true,
   selectedContent: false,
   modalIsVisible: false,
-  modalType: <"title" | "entry" | "branch" | "condition">"title",
+  modalType: <"title" | "entry" | "entryflag" | "entryoption" | "branch" | "condition">"title",
   modalTitle: "Modal Title",
   modalInputElement: undefined,
   modelInput: "",
   isBlurred: false,
+  get getIsModalDropDown() {
+    return model.modalType == "entry";
+  },
+  get getSelectedEntryData() {
+    return model.branches[model.selectedBranch].content[model.selectedEntry];
+  },
   get getIsSomethingSelected() {
     return this.branches.some((b: any) => {
       return b.UI.branchSelected || b.UI.conditionsSelected || b.UI.contentSelected;
@@ -65,7 +46,6 @@ const model = {
   get isBranchSelected() {
     return this.branchSelected;
   },
-
   get getCaretRotation() {
     if (!this.treeCollapsed) return "";
     else return "dd_rotated";
@@ -81,39 +61,16 @@ const model = {
   get getBranches() {
     return this.branches;
   },
-  /* get getConditions() {
-    const conds = Object.keys(this.branches[this.selectedBranch].conditions);
-    const newArray = <any>[];
-    conds.forEach((k: any, i: number) => {
-      newArray.push({ id: k, entry: this.branches[this.selectedBranch].conditions[k] });
-      console.log({ id: k, entry: this.branches[this.selectedBranch].conditions[k] });
-    });
-
-    console.log(newArray);
-
-    return newArray;
-  }, */
   get getCurrentBranch() {
     return this.currentBranch;
   },
   get getConditions() {
+    console.log(this.branches[this.selectedBranch].conditions);
+
     return this.branches[this.selectedBranch].conditions;
-    /* const conditions = this.branches[this.selectedBranch].conditions;
-    const result = Object.keys(conditions).map(id => {
-      return { id, entry: conditions[id] };
-    });
-    return result; */
   },
   get getContent() {
-    const conds = Object.keys(this.branches[this.selectedBranch].content);
-    const newArray = <any>[];
-    conds.forEach((k: any, i: number) => {
-      newArray.push({
-        type: this.branches[this.selectedBranch].content[k].id,
-        entry: this.branches[this.selectedBranch].content[k].type,
-      });
-    });
-    return newArray;
+    return this.branches[this.selectedBranch].content;
   },
 
   toggleFlag: (_event: any, model: any, element: any, _attribute: any, object: any) => {
@@ -138,7 +95,18 @@ const model = {
     //have to wait for a peasy render prior to doing next step
     setTimeout(() => {
       (model.modalInputElement as HTMLElement).focus();
-    }, 1000);
+    }, 250);
+  },
+  addContent: (_event: any, model: any) => {
+    model.modalTitle = "Enter Entry Type";
+    model.modalType = "entry";
+    model.isBlurred = true;
+    model.modalInput = "";
+    model.modalIsVisible = true;
+    //have to wait for a peasy render prior to doing next step
+    setTimeout(() => {
+      (model.modalInputElement as HTMLElement).focus();
+    }, 250);
   },
   chooseConditions: (_event: any, model: any, element: any) => {
     unselectALL();
@@ -197,6 +165,61 @@ const model = {
       model.treeCollapsed = true;
     }
   },
+  back: (_event: any, model: any, _element: HTMLElement, _attribute: any, _object: any) => {
+    console.log(model);
+    model.selectedContent = false;
+    model.selectedCondition = false;
+    model.branchSelected = true;
+  },
+  selectEntry: (_event: any, model: any, element: HTMLElement, _attribute: any, object: any) => {
+    object.$parent.$model.isEntrySelected = true;
+    console.log(element.getAttribute("data-index"));
+
+    object.$parent.$model.selectedEntry = element.getAttribute("data-index");
+  },
+  toggleEntryView: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
+    console.log(object);
+    object.$model.isEntrySelected = false;
+  },
+  addContentEntryFlag: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
+    model.modalTitle = "Enter Flag Name";
+    model.modalType = "entryflag";
+    model.isBlurred = true;
+    model.modalInput = "";
+    model.modalIsVisible = true;
+    //have to wait for a peasy render prior to doing next step
+    setTimeout(() => {
+      (model.modalInputElement as HTMLElement).focus();
+    }, 250);
+  },
+  addContentEntryOption: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
+    model.modalTitle = "Enter Option Message";
+    model.modalType = "entryoption";
+    model.isBlurred = true;
+    model.modalInput = "";
+    model.modalIsVisible = true;
+    //have to wait for a peasy render prior to doing next step
+    setTimeout(() => {
+      (model.modalInputElement as HTMLElement).focus();
+    }, 250);
+  },
+  addOptionFlag: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
+    console.log(object);
+    object.$parent.$model.selectedOption = model.option.$index;
+    object.$parent.$model.modalTitle = "Enter Option Message";
+    object.$parent.$model.modalType = "entryoptionflag";
+    object.$parent.$model.isBlurred = true;
+    object.$parent.$model.modalInput = "";
+    object.$parent.$model.modalIsVisible = true;
+    //have to wait for a peasy render prior to doing next step
+    setTimeout(() => {
+      (object.$parent.$model.modalInputElement as HTMLElement).focus();
+    }, 250);
+  },
+  toggleOptionFlag: (_event: any, model: any, _element: HTMLElement, _attribute: any, _object: any) => {
+    if (model.flag.entry) model.flag.entry = false;
+    else model.flag.entry = true;
+  },
   newTree: (_event: any, model: any) => newTree(model),
   editTree: () => editTree(),
   newBranch: () => newBranch(),
@@ -214,7 +237,6 @@ const template = `
           <button class="buttons" \${click@=>newTree}>New Tree</button>
           <button class="buttons" \${click@=>editTree}>Edit Tree</button>
           <button class="buttons" \${disabled<=>isNewBranchDisabled} \${click@=>newBranch}>New Branch</button>
-          <button class="buttons" \${disabled<=>isNewEntryDisabled} \${click@=>newEntry}>New Entry</button>
           <button class="buttons" \${disabled<=>isExportDisabled} \${click@=>exportJSON}>Export JSON</button>
         </div>
     </div>
@@ -230,11 +252,7 @@ const template = `
             <span class="currentText"> > </span>
             <span class="currentText">\${currentBranch}</span>
           </div>
-          <div class="currentEntry">
-            <span class="currentText">Current Entry</span>
-            <span class="currentText"> > </span>
-            <span class="currentText">\${currentEntry}</span>
-          </div>
+         
     </div>
 
     <div class="TreeView">
@@ -268,7 +286,7 @@ const template = `
                                 <div>Content:</div>
                             </div> 
                             <div \${===branch.UI.contentCollapsed}>
-                              <div class="condition bump"\${content<=*getContent:entry}>  Entry:    \${content.type}</div>
+                              <div class="condition bump"\${content<=*getContent:id}>Index: \${content.$index}  Entry:    \${content.type}</div>
                             </div>
                         </div>
                         </div>
@@ -303,25 +321,70 @@ const template = `
               </div>
               </div>
               </div>
+              <a href="#" class="CT_Link smallLink" \${click@=>back}">Back</a>
           </div>
 
           <div  class="CT_Content" \${===isContentSelected}>
-            content date
+            <span class="CT_Title">Content</span>
+            <div class="CT_Cond_inner">
+               <a href="#" class="CT_Link" \${click@=>addContent} \${!==isEntrySelected} >Add Action Entry</a>
+               <div \${!==isEntrySelected}>
+                  <div class="CT_Entry" \${entry<=*getContent:id}>
+                    <a href="#" \${click@=>selectEntry} data-index="\${entry.$index}"> Index:  \${entry.$index}</a>
+                    <span>:</span>
+                    <div>Type:   \${entry.type}</div>
+                  </div>
+               </div>
+               
+                  <div style="width: 95%;" \${===isEntrySelected}>
+                      <a href="#" class="CT_Link smallLink" \${click@=>toggleEntryView}">Back</a>
+                      <div class="CT_Entry_Config">
+                          <div style="width:100%; display: flex; justify-content: space-between;"><span>Index: \${getSelectedEntryData.$index}</span><span>                    UUID: \${getSelectedEntryData.id} </span></div>
+                          <div><span>Type: </span> 
+                          <select name="type">
+                            <option \${'left'==> getSelectedEntryData.type}>left</option>
+                            <option \${'right'==> getSelectedEntryData.type}>right</option>
+                            <option \${'basic'==> getSelectedEntryData.type}>basic</option>
+                            <option \${'left_interact'==> getSelectedEntryData.type}>left_interact</option>
+                            <option \${'right_interact'==> getSelectedEntryData.type}>right_interact</option>
+                          </select>
+                          </div>
+
+                          <div><span>Speed: </span><input type="number" \${value<=>getSelectedEntryData.speed}/></div>
+                          <div><span>Message: </span><input type="text" \${value<=>getSelectedEntryData.message}/></div>
+                          <div><span>Avatar: </span><input type="text" \${value<=>getSelectedEntryData.avatar}/></div>
+                          <div><span>End: </span><input type="checkbox" \${value<=>getSelectedEntryData.end}/></div>
+                          <div><span>Flags   </span><a href="#" \${click@=>addContentEntryFlag}>Add Flag</a></div>
+                          <div \${flag<=*getSelectedEntryData.flags} >\${flag.id}:\${flag.entry}: <a href="#" \${click@=>flag.toggle}>Toggle</a>   </div>
+                          <div><span>Options   </span><a href="#" \${click@=>addContentEntryOption}>Add Option</a></div>
+                          <div class="CT_options" \${option<=*getSelectedEntryData.options} ><span class="bump">\${option.message} </span>
+                            <a href="#" \${click@=>addOptionFlag}>Add Flag</a>
+                            <div class="CT_option_flags" \${flag<=*option.flags}> \${flag.id} : \${flag.entry} <a href="#" \${click@=>toggleOptionFlag} data-index="\${flag.$index}">Toggle</a></div>
+                          </div>
+                          
+                      </div>
+                  </div>
+              </div>
+              <a href="#" class="CT_Link smallLink" \${click@=>back}">Back</a>
+            </div>
           </div>
-      </div>
     </div>
     
 </div>
-
-
-
 
     <div class="modal" \${===modalIsVisible}>
         <div class="modalblur"></div>  
         <div class="modalcontainer">
             <div style="width: 100%; height: 100%; position: relative;">
               <div class="modalTitle">\${modalTitle}</div>
-              <input class="modalInput" type="text" \${==>modalInputElement} \${value<=>modalInput} required pattern="^[\\w\\-. ]+$"/>
+              <input \${!==getIsModalDropDown}  class="modalInput" type="text" \${==>modalInputElement} \${value<=>modalInput} required pattern="^[\\w\\-. ]+$"/>
+              <select class="modalInput" \${===getIsModalDropDown} name="type"  >
+                  <option \${'left'==> modalInput}>left</option>
+                  <option \${'right'==> modalInput}>right</option>
+                  <option \${'basic'==> modalInput}>basic</option>
+                  <option \${'left_interact'==> modalInput}>left_interact</option>
+                  <option \${'right_interact'==> modalInput}>right_interact</option>
+              </select>
               <button class="buttons modalButtons" \${click@=>modalSubmit}>Submit</button>
             </div>
         </div>
@@ -329,87 +392,15 @@ const template = `
 </div>
 `;
 
-/* */
+//<input type="text" \${value<=>getSelectedEntryData.type}/>
+
 UI.create(document.body, template, model);
 UI.initialize(100 / 6);
-
-/* model.branches.push({
-  id: "0",
-  UI: {
-    get getCaretRotation() {
-      if (this.branchCollapsed) return "";
-      else return " dd_rotated";
-    },
-    branchSelected: false,
-    branchCollapsed: true,
-    get getConditionCaretRotation() {
-      if (!this.condistionsCollapsed) return "";
-      else return " dd_rotated";
-    },
-    get getConditionSelected() {
-      if (!this.conditionsSelected) return "";
-      else return " isSelected";
-    },
-    condistionsCollapsed: true,
-    conditionsSelected: false,
-    get getContentCaretRotation() {
-      if (!this.contentCollapsed) return "";
-      else return " dd_rotated";
-    },
-    get getContentSelected() {
-      if (!this.contentSelected) return "";
-      else return " isSelected";
-    },
-    contentCollapsed: true,
-    contentSelected: false,
-  },
-  conditions: { threat: false, meek: false, deaf: false, angry: false },
-  content: [
-    {
-      id: "0",
-      type: "left",
-      speed: 40,
-      message: "Get out of my way, ... PUNK!",
-      avatar: "./src/assets/images/npc2_avatar.png",
-    },
-    {
-      id: "1",
-      type: "right",
-      speed: 80,
-      message: "...",
-      avatar: "./src/assets/images/hero_avatar.png",
-      end: true,
-      flags: { threat: true },
-    },
-  ], 
-}); /* 
-model.branches.push({
-  id: "1",
-  conditions: { threat: true, meek: false, deaf: false, angry: false },
-  content: [
-    {
-      type: "left",
-      speed: 40,
-      message: "Get out of my way, ... PUNK!",
-      avatar: "./src/assets/images/npc2_avatar.png",
-    },
-    {
-      type: "right",
-      speed: 80,
-      message: "...",
-      avatar: "./src/assets/images/hero_avatar.png",
-      end: true,
-      flags: { threat: true },
-    },
-  ],
-}); */
-
 //#endregion peasyUI
 
 //#region userFuncs
 function newTree(model: any) {
   //setup modal
-
   model.modalTitle = "Enter Dialog Tree Name";
   model.modalType = "title";
   model.isBlurred = true;
@@ -418,7 +409,7 @@ function newTree(model: any) {
   //have to wait for a peasy render prior to doing next step
   setTimeout(() => {
     (model.modalInputElement as HTMLElement).focus();
-  }, 1000);
+  }, 250);
 }
 function editTree() {}
 function newBranch() {
@@ -474,7 +465,9 @@ function newBranch() {
   model.selectedBranch = newID;
 }
 function newEntry() {}
+
 function exportJSON() {}
+
 function modalSubmit(model: any) {
   //validate input
   if (model.modalInput == "") return;
@@ -482,30 +475,119 @@ function modalSubmit(model: any) {
   //frame out different modal types
   switch (model.modalType) {
     case "title":
-      model.modalIsVisible = false;
-      model.isBlurred = false;
-      model.isNewBranchDisabled = false;
-      model.isNewEntryDisabled = false;
-      model.isExportDisabled = false;
-      model.currentTree = model.modalInput;
+      {
+        model.modalIsVisible = false;
+        model.isBlurred = false;
+        model.isNewBranchDisabled = false;
+        model.isNewEntryDisabled = false;
+        model.isExportDisabled = false;
+        model.currentTree = model.modalInput;
+      }
       break;
     case "entry":
+      {
+        const newType = model.modalInput;
+        let bIndex = model.selectedBranch;
+        model.branches[bIndex].content.push({
+          id: uuidv4(),
+          type: newType,
+          speed: 0,
+          message: "",
+          avatar: "",
+          end: false,
+          flags: [],
+          options: [],
+        });
+        model.modalIsVisible = false;
+        model.isBlurred = false;
+      }
+      break;
+
+    case "entryflag":
+      //grab input info
+      {
+        const newFlag = model.modalInput;
+        //insert data into branch.condition object
+        let bIndex = model.selectedBranch;
+        let cIndex = model.selectedEntry;
+        console.log(model.branches[bIndex].content[cIndex]);
+
+        model.branches[bIndex].content[cIndex].flags.push({
+          id: newFlag,
+          entry: false,
+          toggle: (_event: any, model: any) => {
+            if (model.flag.entry) model.flag.entry = false;
+            else model.flag.entry = true;
+          },
+        });
+        model.modalIsVisible = false;
+        model.isBlurred = false;
+        console.log(model.branches[bIndex].content[cIndex].flags);
+      }
+
+      break;
+    case "entryoption":
+      //grab input info
+      {
+        const newMessage = model.modalInput;
+        //insert data into branch.condition object
+        let bIndex = model.selectedBranch;
+        let cIndex = model.selectedEntry;
+        console.log(model.branches[bIndex].content[cIndex]);
+
+        model.branches[bIndex].content[cIndex].options.push({
+          message: newMessage,
+          flags: [],
+          addFlag: (_event: any, model: any) => {
+            console.log(model);
+          },
+        });
+        model.modalIsVisible = false;
+        model.isBlurred = false;
+        console.log(model.branches[bIndex].content[cIndex].options);
+      }
+
+      break;
+    case "entryoptionflag":
+      //grab input info
+      {
+        const newFlag = model.modalInput;
+        //insert data into branch.condition object
+        let bIndex = model.selectedBranch;
+        let cIndex = model.selectedEntry;
+        let oIndex = model.selectedOption;
+        console.log(model.branches[bIndex].content[cIndex]);
+
+        model.branches[bIndex].content[cIndex].options[oIndex].flags.push({
+          id: newFlag,
+          entry: false,
+          toggle: (_event: any, model: any) => {
+            if (model.flag.entry) model.flag.entry = false;
+            else model.flag.entry = true;
+          },
+        });
+        model.modalIsVisible = false;
+        model.isBlurred = false;
+        console.log(model.branches[bIndex].content[cIndex].flags);
+      }
       break;
     case "condition":
       //grab input info
-      const newFlag = model.modalInput;
-      //insert data into branch.condition object
-      const bIndex = model.currentBranch.split("-")[1];
-      model.branches[bIndex].conditions.push({
-        id: newFlag,
-        entry: false,
-        toggle: (_event: any, model: any) => {
-          if (model.condition.entry) model.condition.entry = false;
-          else model.condition.entry = true;
-        },
-      });
-      model.modalIsVisible = false;
-      model.isBlurred = false;
+      {
+        const newFlag = model.modalInput;
+        //insert data into branch.condition object
+        let bIndex = model.selectedBranch;
+        model.branches[bIndex].conditions.push({
+          id: newFlag,
+          entry: false,
+          toggle: (_event: any, model: any) => {
+            if (model.condition.entry) model.condition.entry = false;
+            else model.condition.entry = true;
+          },
+        });
+        model.modalIsVisible = false;
+        model.isBlurred = false;
+      }
       break;
   }
 }
