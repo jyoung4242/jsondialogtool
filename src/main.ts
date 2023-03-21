@@ -4,31 +4,31 @@ import { v4 as uuidv4 } from "uuid";
 
 //#region peasyUI
 const model = {
-  dialogJSON: <any>{},
-  datastr: ``,
-  downloadLink: null,
-  uploadLink: <any>null,
-  branches: <any>[],
-  currentTree: "N/A",
-  currentBranch: "N/A",
-  currentEntry: "N/A",
-  isNewBranchDisabled: true,
-  isEntrySelected: false,
-  selectedEntry: 0,
-  selectedOption: 0,
-  isNewEntryDisabled: true,
-  isExportDisabled: true,
-  treeCollapsed: false,
-  selectedBranch: "0",
-  branchSelected: false,
-  selectedCondition: true,
-  selectedContent: false,
-  modalIsVisible: false,
-  modalType: <"title" | "entry" | "entryflag" | "entryoption" | "branch" | "condition">"title",
-  modalTitle: "Modal Title",
-  modalInputElement: undefined,
-  modelInput: "",
-  isBlurred: false,
+  //state discrete UI values for Peasy-UI
+  dialogJSON: <any>{}, // the exported JSON object
+  downloadLink: null, //anchor tag element binding
+  uploadLink: <any>null, //file input tag element binding
+  branches: <any>[], //array of all data used for application
+  currentTree: "N/A", //filename used for the UI and for saving file
+  currentBranch: "N/A", //current Branch UI binding
+  isNewBranchDisabled: true, //button disable attributes whn app starts
+  isEntrySelected: false, //used to show details in content panel, its a flag that renders content
+  selectedEntry: 0, //index value for which entry to show as content
+  selectedOption: 0, //same, index value, which option to toggle
+  isExportDisabled: true, //button disable attributes whn app starts
+  treeCollapsed: false, //controls if treeview 'tree' is collapsed or not
+  selectedBranch: "0", //index for which branch in treeview is selected
+  branchSelected: false, //boolean flag that controls if content rendered
+  selectedCondition: true, //boolean flag that controls if content rendered
+  selectedContent: false, //boolean flag that controls if content rendered
+  modalIsVisible: false, //boolean flag that controls if content rendered
+  modalType: <string>"title", //setting this string changes how/what happens with modal
+  modalTitle: "Modal Title", //UI content of the modal title, changes depending on what you're doing
+  modalInputElement: undefined, //div element that's bound
+  modelInput: "", //input feild that is bound and read for what the user input is
+  isBlurred: false, //boolean flag for changing the css properties of the main window
+
+  // Peasy-UI data GETTERS
   get getIsModalDropDown() {
     return model.modalType == "entry";
   },
@@ -74,6 +74,10 @@ const model = {
     return this.branches[this.selectedBranch].content;
   },
 
+  //*************************************** */
+  //Peasy-UI Event callbacks
+  //*************************************** */
+
   toggleFlag: (_event: any, model: any, element: any, _attribute: any, object: any) => {
     const myKey = (element as HTMLElement).getAttribute("data-key");
     const bIndex = object.$parent.$model.currentBranch.split("-")[1];
@@ -82,6 +86,10 @@ const model = {
       object.$parent.$model.branches[bIndex].conditions[<string>myKey] = false;
     else object.$parent.$model.branches[bIndex].conditions[<string>myKey] = true;
   },
+  /**
+   * peasy callback
+   * sets up input modal params and shows modal
+   */
   addCondition: (_event: any, model: any) => {
     model.modalTitle = "Enter Condition Title";
     model.modalType = "condition";
@@ -93,6 +101,10 @@ const model = {
       (model.modalInputElement as HTMLElement).focus();
     }, 250);
   },
+  /**
+   * peasy callback
+   * sets up input modal params and shows modal
+   */
   addContent: (_event: any, model: any) => {
     model.modalTitle = "Enter Entry Type";
     model.modalType = "entry";
@@ -104,7 +116,12 @@ const model = {
       (model.modalInputElement as HTMLElement).focus();
     }, 250);
   },
-  chooseConditions: (_event: any, model: any, element: any) => {
+  /**
+   * peasy callback
+   * modifies UI parames of specific branch to
+   * show selected condition highlighted
+   */
+  chooseConditions: (_event: any, model: any) => {
     unselectALL();
     const bIndex = model.currentBranch.split("-")[1];
     model.branches[bIndex].UI.conditionsSelected = true;
@@ -112,7 +129,12 @@ const model = {
     model.selectedCondition = true;
     model.branchSelected = false;
   },
-  chooseContent: (_event: any, model: any, element: any) => {
+  /**
+   * peasy callback
+   * modifies UI parames of specific branch to
+   * show selected content highlighted
+   */
+  chooseContent: (_event: any, model: any) => {
     unselectALL();
     const bIndex = model.currentBranch.split("-")[1];
     model.branches[bIndex].UI.contentSelected = true;
@@ -120,6 +142,12 @@ const model = {
     model.selectedCondition = false;
     model.branchSelected = false;
   },
+  /**
+   * peasy callback
+   * modifies UI parames of specific branch to
+   * show selected content highlighted
+   * AAAAAND toggles dropdown
+   */
   contentClicked: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
     if (model.branch.UI.contentCollapsed) model.branch.UI.contentCollapsed = false;
     else model.branch.UI.contentCollapsed = true;
@@ -129,7 +157,13 @@ const model = {
     object.$parent.$model.branchSelected = false;
     model.branch.UI.contentSelected = true;
   },
-  conditionClicked: (_event: any, model: any, element: HTMLElement, _attribute: any, object: any) => {
+  /**
+   * peasy callback
+   * modifies UI parames of specific branch to
+   * show selected condition highlighted
+   * AAAAAND toggles dropdown
+   */
+  conditionClicked: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
     if (model.branch.UI.condistionsCollapsed) model.branch.UI.condistionsCollapsed = false;
     else model.branch.UI.condistionsCollapsed = true;
     unselectALL();
@@ -137,11 +171,15 @@ const model = {
     object.$parent.$model.selectedCondition = true;
     object.$parent.$model.branchSelected = false;
     model.branch.UI.conditionsSelected = true;
-    console.log(element.getAttribute("data-branch"));
-    console.log(model);
     object.$parent.$model.currentBranch = `Branch-${model.branch.id}`;
     object.$parent.$model.selectedBranch = model.branch.id;
   },
+  /**
+   * peasy callback
+   * modifies UI parames of specific branch to
+   * show selected branch highlighted
+   * AAAAAND toggles dropdown
+   */
   branchClicked: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
     if (model.branch.UI.branchCollapsed) model.branch.UI.branchCollapsed = false;
     else model.branch.UI.branchCollapsed = true;
@@ -154,6 +192,10 @@ const model = {
     object.$parent.$model.currentBranch = `Branch-${model.branch.id}`;
     object.$parent.$model.selectedBranch = model.branch.id;
   },
+  /**
+   * peasy callback
+   * toggles dropdown for the tree
+   */
   treeClicked: (_event: any, model: any) => {
     if (model.treeCollapsed) {
       model.treeCollapsed = false;
@@ -161,23 +203,41 @@ const model = {
       model.treeCollapsed = true;
     }
   },
+  /**
+   * peasy callback
+   * when in the content panel a back link is clicked
+   * modifies the UI display properties
+   */
   back: (_event: any, model: any, _element: HTMLElement, _attribute: any, _object: any) => {
-    console.log(model);
     model.selectedContent = false;
     model.selectedCondition = false;
     model.branchSelected = true;
   },
-  selectEntry: (_event: any, model: any, element: HTMLElement, _attribute: any, object: any) => {
-    object.$parent.$model.isEntrySelected = true;
-    console.log(element.getAttribute("data-index"));
 
+  /**
+   * peasy callback
+   * sets the content panel's display properties
+   * to show the correct entry details
+   */
+  selectEntry: (_event: any, _model: any, element: HTMLElement, _attribute: any, object: any) => {
+    object.$parent.$model.isEntrySelected = true;
     object.$parent.$model.selectedEntry = element.getAttribute("data-index");
   },
-  toggleEntryView: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
-    console.log(object);
+  /**
+   * peasy callback
+   * sets the content panel's display properties
+   * toggling the entry display
+   * which is triggered by the back link for that data entry
+   */
+  toggleEntryView: (_event: any, _model: any, _element: HTMLElement, _attribute: any, object: any) => {
     object.$model.isEntrySelected = false;
   },
-  addContentEntryFlag: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
+  /**
+   * peasy callback
+   * sets the content panel's display properties
+   * to show the correct entry details
+   */
+  addContentEntryFlag: (_event: any, model: any, _element: HTMLElement, _attribute: any) => {
     model.modalTitle = "Enter Flag Name";
     model.modalType = "entryflag";
     model.isBlurred = true;
@@ -188,7 +248,11 @@ const model = {
       (model.modalInputElement as HTMLElement).focus();
     }, 250);
   },
-  addContentEntryOption: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
+  /**
+   * peasy callback
+   * sets up input modal params and shows modal
+   */
+  addContentEntryOption: (_event: any, model: any, _element: HTMLElement, _attribute: any) => {
     model.modalTitle = "Enter Option Message";
     model.modalType = "entryoption";
     model.isBlurred = true;
@@ -199,8 +263,11 @@ const model = {
       (model.modalInputElement as HTMLElement).focus();
     }, 250);
   },
+  /**
+   * peasy callback
+   * sets up input modal params and shows modal
+   */
   addOptionFlag: (_event: any, model: any, _element: HTMLElement, _attribute: any, object: any) => {
-    console.log(object);
     object.$parent.$model.selectedOption = model.option.$index;
     object.$parent.$model.modalTitle = "Enter Option Message";
     object.$parent.$model.modalType = "entryoptionflag";
@@ -212,15 +279,31 @@ const model = {
       (object.$parent.$model.modalInputElement as HTMLElement).focus();
     }, 250);
   },
+  /**
+   * peasy callback
+   * toggles the true/false setting for the option Story Flag
+   */
   toggleOptionFlag: (_event: any, model: any, _element: HTMLElement, _attribute: any, _object: any) => {
     if (model.flag.entry) model.flag.entry = false;
     else model.flag.entry = true;
   },
+  /**
+   * peasy callback
+   * remote calls to user functions below
+   * felt like a good idea at that time
+   */
   newTree: (_event: any, model: any) => newTree(model),
   editTree: () => editTree(),
   newBranch: () => newBranch(),
   exportJSON: () => exportJSON(),
   modalSubmit: (_event: any, model: any) => modalSubmit(model),
+  /**
+   * peasy callback
+   * triggered by the edit tree button
+   * opens file dialoge and if json file selected, reads it in
+   * PROBABLY should have some json file validation added, but
+   * hey... live a little
+   */
   processJSON: (event: any, _model: any, _element: HTMLElement, _attribute: any, _object: any) => {
     event.preventDefault = true;
     let fr = new FileReader();
@@ -307,6 +390,10 @@ const model = {
     fr.readAsText(event.target.files[0]);
   },
 };
+
+//************************************ */
+//Peasy-UI injected HTML
+//************************************ */
 const template = `
 <div class="App">
 <div class="maincontent \${blurString}">
@@ -481,6 +568,13 @@ UI.initialize(100 / 6);
 //#endregion peasyUI
 
 //#region userFuncs
+
+/**
+ * newTree
+ * sets up the input modal settings and moves focus to it after it renders
+ * @param model UI object data passed to function
+ */
+
 function newTree(model: any) {
   //setup modal
   model.modalTitle = "Enter Dialog Tree Name";
@@ -493,9 +587,24 @@ function newTree(model: any) {
     (model.modalInputElement as HTMLElement).focus();
   }, 250);
 }
+
+/**
+ * editTree
+ * initiates the file open dialoge which is bound
+ * to the uploadLink property of data model
+ * @param model UI object data passed to function
+ */
+
 function editTree() {
   (model.uploadLink as HTMLInputElement).click();
 }
+
+/**
+ * newBranch
+ * inserts a blank branch object into the
+ * branches property, then configures the selection
+ * properties for the UI
+ */
 
 function newBranch() {
   unselectALL();
@@ -550,37 +659,38 @@ function newBranch() {
   model.selectedBranch = newID;
 }
 
+/**
+ * exportJSON
+ * loops through branches property and builds up the
+ * JSON object that gets handed over to the
+ * download link which is an anchor tag in the DOM
+ */
 function exportJSON() {
   //build json object
   model.dialogJSON = {};
   model.branches.forEach(
     (branch: { id: string; conditions: Array<{ id: string; entry: boolean }>; content: Array<object> }) => {
-      //console.log(branch);
       let cond: any = {};
       let cont: any = [];
       branch.conditions.forEach((c: { id: string; entry: boolean }) => {
         cond[c.id] = c.entry;
       });
-      //console.log("cond:", cond);
 
       branch.content.forEach((c: any, index: number) => {
-        //console.log(c);
         cont.push({});
         Object.keys(c).forEach((k: any) => {
           if (k != "id") cont[index][k] = c[k];
         });
       });
-      //console.log("cont:", cont);
 
       model.dialogJSON[branch.id as keyof typeof model.dialogJSON] = {
         conditions: cond,
         content: cont,
       };
-
-      console.log(model.dialogJSON);
     }
   );
 
+  //pass download data into the anchor tag in the DOM
   const blob = new Blob([JSON.stringify(model.dialogJSON)], { type: "text/json" });
   if (model.downloadLink) {
     (model.downloadLink as HTMLAnchorElement).href = URL.createObjectURL(blob);
@@ -588,12 +698,25 @@ function exportJSON() {
   }
 }
 
+/**
+ * modalSubmit
+ * This is where some magic happens
+ * depending on the modal type, you can manipulate the properties of the modal
+ * instead of making a bunch of different modals
+ * This event is triggered off the submit button click of the modal
+ * @param model - this is the state modal data
+ *
+ */
+
 function modalSubmit(model: any) {
   //validate input
   if (model.modalInput == "") return;
 
   //frame out different modal types
   switch (model.modalType) {
+    /**
+     * When your simply creating the new JSON file name
+     */
     case "title":
       {
         model.modalIsVisible = false;
@@ -603,6 +726,13 @@ function modalSubmit(model: any) {
         model.currentTree = model.modalInput;
       }
       break;
+    /**
+     * when you have an open branch, and your adding a new content entry
+     * into it
+     * in the UI model, peasy iterates best when each object has a unique ID
+     * so for the UI data, there's a uuid4 for the id, but this isn't carried
+     * on when outputting the json data
+     */
     case "entry":
       {
         const newType = model.modalInput;
@@ -622,6 +752,11 @@ function modalSubmit(model: any) {
       }
       break;
 
+    /**
+     * when you have a dialog entry that sets story flags
+     * you can specify the flags value and ID, this occurs
+     * when you click the add flag link
+     */
     case "entryflag":
       //grab input info
       {
@@ -629,7 +764,6 @@ function modalSubmit(model: any) {
         //insert data into branch.condition object
         let bIndex = model.selectedBranch;
         let cIndex = model.selectedEntry;
-        console.log(model.branches[bIndex].content[cIndex]);
 
         model.branches[bIndex].content[cIndex].flags.push({
           id: newFlag,
@@ -641,10 +775,15 @@ function modalSubmit(model: any) {
         });
         model.modalIsVisible = false;
         model.isBlurred = false;
-        console.log(model.branches[bIndex].content[cIndex].flags);
       }
 
       break;
+    /**
+     * when you have a dialog entry that sets up for chosen options
+     * that the user can select in the game... choice 1, choice 2
+     * this is how you enter the choice data
+     * this data happens when you click the add Option link
+     */
     case "entryoption":
       //grab input info
       {
@@ -652,21 +791,20 @@ function modalSubmit(model: any) {
         //insert data into branch.condition object
         let bIndex = model.selectedBranch;
         let cIndex = model.selectedEntry;
-        console.log(model.branches[bIndex].content[cIndex]);
 
         model.branches[bIndex].content[cIndex].options.push({
           message: newMessage,
           flags: [],
-          addFlag: (_event: any, model: any) => {
-            console.log(model);
-          },
         });
         model.modalIsVisible = false;
         model.isBlurred = false;
-        console.log(model.branches[bIndex].content[cIndex].options);
       }
 
       break;
+    /**
+     * so... the results of the choices the user makes depends on the storyflags and
+     * values you define here, reached by clicking the add flag link UNDER each option
+     */
     case "entryoptionflag":
       //grab input info
       {
@@ -675,8 +813,6 @@ function modalSubmit(model: any) {
         let bIndex = model.selectedBranch;
         let cIndex = model.selectedEntry;
         let oIndex = model.selectedOption;
-        console.log(model.branches[bIndex].content[cIndex]);
-
         model.branches[bIndex].content[cIndex].options[oIndex].flags.push({
           id: newFlag,
           entry: false,
@@ -687,9 +823,12 @@ function modalSubmit(model: any) {
         });
         model.modalIsVisible = false;
         model.isBlurred = false;
-        console.log(model.branches[bIndex].content[cIndex].flags);
       }
       break;
+    /**
+     * when you click add condition, which defines the tested set of Story Flags which guides the narration
+     * process in the game, reached by clicking the add condition link
+     */
     case "condition":
       //grab input info
       {
@@ -710,6 +849,12 @@ function modalSubmit(model: any) {
       break;
   }
 }
+
+/**
+ * unselectAll, loops through all the UI data configurations
+ * and sets them all to a know state, used prior to setting the new
+ * state for the UI
+ */
 const unselectALL = () => {
   model.branches.forEach((branch: any) => {
     branch.UI.branchSelected = false;
