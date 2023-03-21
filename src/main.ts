@@ -311,8 +311,8 @@ const model = {
       if (fr.result) {
         model.isNewBranchDisabled = false;
         model.isExportDisabled = false;
-
         model.currentTree = event.target.files[0].name.split(".")[0];
+
         const outputstring: string = <string>fr.result;
         const outputobject: object = JSON.parse(outputstring);
 
@@ -325,10 +325,7 @@ const model = {
               conditionArray.push({
                 id: condition,
                 entry: conditions[condition],
-                toggle: (_event: any, model: any) => {
-                  if (model.condition.entry) model.condition.entry = false;
-                  else model.condition.entry = true;
-                },
+                toggle: (_event: any, model: any) => (model.condition.entry = !model.condition.entry),
               });
             });
 
@@ -339,9 +336,7 @@ const model = {
               contentArray.push({
                 id: uuidv4(),
               });
-              Object.keys(cont).forEach((k: any) => {
-                contentArray[index][k] = cont[k];
-              });
+              Object.keys(cont).forEach((k: any) => (contentArray[index][k] = cont[k]));
             });
 
             model.branches.push({
@@ -768,10 +763,7 @@ function modalSubmit(model: any) {
         model.branches[bIndex].content[cIndex].flags.push({
           id: newFlag,
           entry: false,
-          toggle: (_event: any, model: any) => {
-            if (model.flag.entry) model.flag.entry = false;
-            else model.flag.entry = true;
-          },
+          toggle: (_event: any, model: any) => (model.flag.entry = !model.flag.entry),
         });
         model.modalIsVisible = false;
         model.isBlurred = false;
@@ -791,11 +783,7 @@ function modalSubmit(model: any) {
         //insert data into branch.condition object
         let bIndex = model.selectedBranch;
         let cIndex = model.selectedEntry;
-
-        model.branches[bIndex].content[cIndex].options.push({
-          message: newMessage,
-          flags: [],
-        });
+        model.branches[bIndex].content[cIndex].options.push({ message: newMessage, flags: [] });
         model.modalIsVisible = false;
         model.isBlurred = false;
       }
@@ -816,10 +804,7 @@ function modalSubmit(model: any) {
         model.branches[bIndex].content[cIndex].options[oIndex].flags.push({
           id: newFlag,
           entry: false,
-          toggle: (_event: any, model: any) => {
-            if (model.flag.entry) model.flag.entry = false;
-            else model.flag.entry = true;
-          },
+          toggle: (_event: any, model: any) => (model.flag.entry = !model.flag.entry),
         });
         model.modalIsVisible = false;
         model.isBlurred = false;
@@ -838,10 +823,7 @@ function modalSubmit(model: any) {
         model.branches[bIndex].conditions.push({
           id: newFlag,
           entry: false,
-          toggle: (_event: any, model: any) => {
-            if (model.condition.entry) model.condition.entry = false;
-            else model.condition.entry = true;
-          },
+          toggle: (_event: any, model: any) => (model.condition.entry = !model.condition.entry),
         });
         model.modalIsVisible = false;
         model.isBlurred = false;
