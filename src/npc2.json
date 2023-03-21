@@ -1,0 +1,104 @@
+{
+  "0": {
+    "conditions": {
+      "threat": false,
+      "meek": false,
+      "deaf": false,
+      "angry": false
+    },
+    "content": [
+      {
+        "type": "left",
+        "speed": 40,
+        "message": "Get out of my way, ... PUNK!",
+        "avatar": "./src/assets/images/npc2_avatar.png"
+      },
+      {
+        "type": "right",
+        "speed": 80,
+        "message": "...",
+        "avatar": "./src/assets/images/hero_avatar.png",
+        "end": true,
+        "flags": { "threat": true }
+      }
+    ]
+  },
+  "1": {
+    "conditions": {
+      "threat": true,
+      "meek": false,
+      "deaf": false,
+      "angry": false
+    },
+    "content": [
+      {
+        "type": "left",
+        "speed": 50,
+        "message": "I said.... GET OUT OF MY WAY!",
+        "avatar": "./src/assets/images/npc2_avatar.png"
+      },
+      { "type": "left", "speed": 90, "message": "ARE YOU DEAF !?!?!?!", "avatar": "./src/assets/images/npc2_avatar.png" },
+      {
+        "type": "right_interact",
+        "options": [
+          { "message": "I'm so sorry...", "flags": { "meek": true } },
+          { "message": "Huh...? Wha....?", "flags": { "deaf": true } },
+          { "message": "NOW YOU DIE!!!!", "flags": { "angry": true } }
+        ],
+        "avatar": "./src/assets/images/hero_avatar.png",
+        "end": true
+      }
+    ]
+  },
+  "2": {
+    "conditions": {
+      "threat": true,
+      "meek": true,
+      "deaf": false,
+      "angry": false
+    },
+    "content": [
+      {
+        "type": "left",
+        "speed": 110,
+        "message": "Yeah.. that's what I thought",
+        "avatar": "./src/assets/images/npc2_avatar.png",
+        "end": true
+      }
+    ]
+  },
+  "3": {
+    "conditions": {
+      "threat": true,
+      "meek": false,
+      "deaf": true,
+      "angry": false
+    },
+    "content": [
+      { "type": "left", "speed": 75, "message": "...", "avatar": "./src/assets/images/npc2_avatar.png", "end": true }
+    ]
+  },
+  "4": {
+    "conditions": {
+      "threat": true,
+      "meek": false,
+      "deaf": false,
+      "angry": true
+    },
+    "content": [
+      { "type": "left", "speed": 70, "message": "GWAAAAAaaaaa.... ", "avatar": "./src/assets/images/npc2_avatar.png" },
+      {
+        "type": "left",
+        "speed": 40,
+        "message": "MOMMY......",
+        "avatar": "./src/assets/images/npc2_avatar.png",
+        "end": true
+      }
+    ]
+  },
+  "default": {
+    "content": [
+      { "type": "left", "speed": 70, "message": ".... ", "avatar": "./src/assets/images/npc2_avatar.png", "end": true }
+    ]
+  }
+}

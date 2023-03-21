@@ -4,7 +4,10 @@ import { v4 as uuidv4 } from "uuid";
 
 //#region peasyUI
 const model = {
-  dialogJSON: ``,
+  dialogJSON: <any>{},
+  datastr: ``,
+  downloadLink: null,
+  uploadLink: <any>null,
   branches: <any>[],
   currentTree: "N/A",
   currentBranch: "N/A",
@@ -65,8 +68,6 @@ const model = {
     return this.currentBranch;
   },
   get getConditions() {
-    console.log(this.branches[this.selectedBranch].conditions);
-
     return this.branches[this.selectedBranch].conditions;
   },
   get getContent() {
@@ -76,15 +77,10 @@ const model = {
   toggleFlag: (_event: any, model: any, element: any, _attribute: any, object: any) => {
     const myKey = (element as HTMLElement).getAttribute("data-key");
     const bIndex = object.$parent.$model.currentBranch.split("-")[1];
-    console.log(model);
 
     if (object.$parent.$model.branches[bIndex].conditions[<string>myKey])
       object.$parent.$model.branches[bIndex].conditions[<string>myKey] = false;
     else object.$parent.$model.branches[bIndex].conditions[<string>myKey] = true;
-
-    console.log("key: ", myKey);
-    console.log("bIndex: ", bIndex);
-    console.log("key: ", object.$parent.$model);
   },
   addCondition: (_event: any, model: any) => {
     model.modalTitle = "Enter Condition Title";
@@ -223,9 +219,93 @@ const model = {
   newTree: (_event: any, model: any) => newTree(model),
   editTree: () => editTree(),
   newBranch: () => newBranch(),
-  newEntry: () => newEntry(),
   exportJSON: () => exportJSON(),
   modalSubmit: (_event: any, model: any) => modalSubmit(model),
+  processJSON: (event: any, _model: any, _element: HTMLElement, _attribute: any, _object: any) => {
+    event.preventDefault = true;
+    let fr = new FileReader();
+    fr.onload = () => {
+      if (fr.result) {
+        model.isNewBranchDisabled = false;
+        model.isExportDisabled = false;
+
+        model.currentTree = event.target.files[0].name.split(".")[0];
+        const outputstring: string = <string>fr.result;
+        const outputobject: object = JSON.parse(outputstring);
+
+        Object.keys(outputobject).forEach((key: any) => {
+          const conditions: string[] = outputobject[key as keyof typeof outputobject]["conditions"];
+          let conditionArray: any = [];
+
+          if (conditions) {
+            Object.keys(conditions).forEach((condition: any) => {
+              conditionArray.push({
+                id: condition,
+                entry: conditions[condition],
+                toggle: (_event: any, model: any) => {
+                  if (model.condition.entry) model.condition.entry = false;
+                  else model.condition.entry = true;
+                },
+              });
+            });
+
+            const content: string[] = outputobject[key as keyof typeof outputobject]["content"];
+            let contentArray: any = [];
+
+            content.forEach((cont: any, index: number) => {
+              contentArray.push({
+                id: uuidv4(),
+              });
+              Object.keys(cont).forEach((k: any) => {
+                contentArray[index][k] = cont[k];
+              });
+            });
+
+            model.branches.push({
+              id: key,
+              UI: {
+                branchSelected: false,
+                branchCollapsed: true,
+                condistionsCollapsed: true,
+                conditionsSelected: false,
+                contentCollapsed: true,
+                contentSelected: false,
+                get getBranchSelected() {
+                  if (!this.branchSelected) return "";
+                  else return " isSelected";
+                },
+                get getCaretRotation() {
+                  if (this.branchCollapsed) return "";
+                  else return " dd_rotated";
+                },
+
+                get getConditionCaretRotation() {
+                  if (!this.condistionsCollapsed) return "";
+                  else return " dd_rotated";
+                },
+                get getConditionSelected() {
+                  if (!this.conditionsSelected) return "";
+                  else return " isSelected";
+                },
+
+                get getContentCaretRotation() {
+                  if (!this.contentCollapsed) return "";
+                  else return " dd_rotated";
+                },
+                get getContentSelected() {
+                  if (!this.contentSelected) return "";
+                  else return " isSelected";
+                },
+              },
+              conditions: [...conditionArray],
+              content: [...contentArray],
+            });
+          }
+        });
+      }
+    };
+    fr.readAsText(event.target.files[0]);
+  },
 };
 const template = `
 <div class="App">
@@ -238,6 +318,8 @@ const template = `
           <button class="buttons" \${click@=>editTree}>Edit Tree</button>
           <button class="buttons" \${disabled<=>isNewBranchDisabled} \${click@=>newBranch}>New Branch</button>
           <button class="buttons" \${disabled<=>isExportDisabled} \${click@=>exportJSON}>Export JSON</button>
+          <a \${==>downloadLink} style="display:none"  download="\${currentTree}.json"></a>
+          <input \${==>uploadLink} \${change@=>processJSON} type="file"  accept=".json" style="display:none"/>
         </div>
     </div>
 
@@ -411,7 +493,10 @@ function newTree(model: any) {
     (model.modalInputElement as HTMLElement).focus();
   }, 250);
 }
-function editTree() {}
+function editTree() {
+  (model.uploadLink as HTMLInputElement).click();
+}
+
 function newBranch() {
   unselectALL();
   const newID = model.branches.length;
@@ -464,9 +549,44 @@ function newBranch() {
   model.selectedCondition = false;
   model.selectedBranch = newID;
 }
-function newEntry() {}
 
-function exportJSON() {}
+function exportJSON() {
+  //build json object
+  model.dialogJSON = {};
+  model.branches.forEach(
+    (branch: { id: string; conditions: Array<{ id: string; entry: boolean }>; content: Array<object> }) => {
+      //console.log(branch);
+      let cond: any = {};
+      let cont: any = [];
+      branch.conditions.forEach((c: { id: string; entry: boolean }) => {
+        cond[c.id] = c.entry;
+      });
+      //console.log("cond:", cond);
+
+      branch.content.forEach((c: any, index: number) => {
+        //console.log(c);
+        cont.push({});
+        Object.keys(c).forEach((k: any) => {
+          if (k != "id") cont[index][k] = c[k];
+        });
+      });
+      //console.log("cont:", cont);
+
+      model.dialogJSON[branch.id as keyof typeof model.dialogJSON] = {
+        conditions: cond,
+        content: cont,
+      };
+
+      console.log(model.dialogJSON);
+    }
+  );
+
+  const blob = new Blob([JSON.stringify(model.dialogJSON)], { type: "text/json" });
+  if (model.downloadLink) {
+    (model.downloadLink as HTMLAnchorElement).href = URL.createObjectURL(blob);
+    (model.downloadLink as HTMLAnchorElement).click();
+  }
+}
 
 function modalSubmit(model: any) {
   //validate input
@@ -479,7 +599,6 @@ function modalSubmit(model: any) {
         model.modalIsVisible = false;
         model.isBlurred = false;
         model.isNewBranchDisabled = false;
-        model.isNewEntryDisabled = false;
         model.isExportDisabled = false;
         model.currentTree = model.modalInput;
       }
